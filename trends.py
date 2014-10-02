@@ -1,4 +1,9 @@
 """Visualizing Twitter Sentiment Across America"""
+# Name: Li, JiaHang(Tak)
+# LogIn: cs61a-ayc
+
+# Partner: Chao, MingHan
+# LogIn: cs61a-hy
 
 from data import word_sentiments, load_tweets
 from datetime import datetime
@@ -344,10 +349,7 @@ def group_by_key(pairs):
 
     return result
 
-def apply_to_all_dict(map_fn, s):
-    return {key: map_fn(s[key]) for key in s}
-
-# definitely need improve!!!
+# consider using apply_to
 def group_tweets_by_state(tweets):
     """Return a dictionary that groups tweets by their nearest state center.
 
@@ -383,20 +385,9 @@ def group_tweets_by_state(tweets):
 
         return min_key
 
-
-        # def distance(state_loc):
-        #     return geo_distance(state_loc, location)
-        # us_states_centers = apply_to_all_dict(find_state_center, us_states)
-        # distance_to_us_states = apply_to_all_dict(distance, us_states_centers)
-        # min_distance = min([distance_to_us_states[key] for key in distance_to_us_states])
-        # for key in distance_to_us_states:
-        #     if distance_to_us_states[key] == min_distance:
-        #         return key
-
     return group_by_key([[find_nearest_state(tweet_location(tweet)), tweet] for tweet in tweets])
 
-
-# definitely need improve!!!
+# consider using apply_to
 def average_sentiments(tweets_by_state):
     """Calculate the average sentiment of the states by averaging over all
     the tweets from each state. Return the result as a dictionary from state
@@ -411,8 +402,6 @@ def average_sentiments(tweets_by_state):
     tweets_by_state -- A dictionary from state names to lists of tweets
     """
     "*** YOUR CODE HERE ***"
-    # Implementation 2
-
     result = {}
 
     for key in tweets_by_state:
@@ -430,26 +419,6 @@ def average_sentiments(tweets_by_state):
             result[key] = total / count_not_none
 
     return result
-
-
-    # Implementation 1
-
-    # result = {}
-    # def analyze(tweets):
-    #     sentiments = apply_to_all(analyze_tweet_sentiment, tweets)
-    #     sentiments = keep_if(has_sentiment, sentiments)
-    #     sentiments_values = apply_to_all(sentiment_value, sentiments)
-    #     if len(sentiments_values) == 0:
-    #         return []
-    #     else:
-    #         return sum(sentiments_values)/len(sentiments_values)
-    #
-    # for key in tweets_by_state:
-    #     sentiment = analyze(tweets_by_state[key])
-    #     if sentiment:
-    #         result[key] = sentiment
-    #
-    # return result
 
 ##########################
 # Command Line Interface #
