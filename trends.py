@@ -171,6 +171,7 @@ def get_word_sentiment(word):
     # Learn more: http://docs.python.org/3/library/stdtypes.html#dict.get
     return make_sentiment(word_sentiments.get(word))
 
+# make the decision
 def analyze_tweet_sentiment(tweet):
     """Return a sentiment representing the degree of positive or negative
     feeling in the given tweet, averaging over all the words in the tweet
@@ -192,26 +193,26 @@ def analyze_tweet_sentiment(tweet):
     "*** YOUR CODE HERE ***"
     # --- List Implementation ---
 
-    list_s_obj = apply_to_all(get_word_sentiment, tweet_words(tweet))
-    list_s_obj = keep_if(has_sentiment, list_s_obj)
-    list_s_value = apply_to_all(sentiment_value, list_s_obj)
-    tweet_sentiment = sum(list_s_value)/len(list_s_value) if list_s_value != [] else None
-    return make_sentiment(tweet_sentiment)
+    # list_s_obj = apply_to_all(get_word_sentiment, tweet_words(tweet))
+    # list_s_obj = keep_if(has_sentiment, list_s_obj)
+    # list_s_value = apply_to_all(sentiment_value, list_s_obj)
+    # tweet_sentiment = sum(list_s_value)/len(list_s_value) if list_s_value != [] else None
+    # return make_sentiment(tweet_sentiment)
 
     # --- For Loop Implementation ---
 
-    # total, count, average = 0, 0, None
-    #
-    # for word in tweet_words(tweet):
-    #     word_sentiment = get_word_sentiment(word)
-    #     if has_sentiment(word_sentiment):
-    #         total += sentiment_value(word_sentiment)
-    #         count += 1
-    #
-    # if count != 0:
-    #     average = total / count
-    #
-    # return make_sentiment(average)
+    total, count, average = 0, 0, None
+
+    for word in tweet_words(tweet):
+        word_sentiment = get_word_sentiment(word)
+        if has_sentiment(word_sentiment):
+            total += sentiment_value(word_sentiment)
+            count += 1
+
+    if count != 0:
+        average = total / count
+
+    return make_sentiment(average)
 
 #################################
 # Phase 2: The Geometry of Maps #
@@ -223,6 +224,7 @@ def apply_to_all(map_fn, s):
 def keep_if(filter_fn, s):
     return [x for x in s if filter_fn(x)]
 
+# consider improving
 def find_centroid(polygon):
     """Find the centroid of a polygon. If a polygon has 0 area, use the latitude
     and longitude of its first position as its centroid.
@@ -276,7 +278,7 @@ def find_centroid(polygon):
         return [sum_lat, sum_lon, abs(area)]
 
 
-
+# consider improving
 def find_state_center(polygons):
     """Compute the geographic center of a state, averaged over its polygons.
 
@@ -315,6 +317,7 @@ def find_state_center(polygons):
 # Phase 3: The Mood of the Nation #
 ###################################
 
+# simplify code
 def group_by_key(pairs):
     """Return a dictionary that relates each unique key in [key, value] pairs
     to a list of all values that appear paired with that key.
@@ -341,11 +344,10 @@ def group_by_key(pairs):
 
     return result
 
-from math import sqrt
-
 def apply_to_all_dict(map_fn, s):
     return {key: map_fn(s[key]) for key in s}
 
+# definitely need improve!!!
 def group_tweets_by_state(tweets):
     """Return a dictionary that groups tweets by their nearest state center.
 
@@ -370,19 +372,31 @@ def group_tweets_by_state(tweets):
     # Improve Algorithm!!!!!!!!!!!
 
     def find_nearest_state(location):
-        def distance(state_loc):
-            return geo_distance(state_loc, location)
-        us_states_centers = apply_to_all_dict(find_state_center, us_states)
-        distance_to_us_states = apply_to_all_dict(distance, us_states_centers)
-        min_distance = min([distance_to_us_states[key] for key in distance_to_us_states])
-        for key in distance_to_us_states:
-            if distance_to_us_states[key] == min_distance:
-                return key
+        min_distance = 999999
+        min_key = 'AK'
+
+        for key in us_states:
+            distance = geo_distance(location, find_state_center(us_states[key]))
+            if distance < min_distance:
+                min_distance = distance
+                min_key = key
+
+        return min_key
+
+
+        # def distance(state_loc):
+        #     return geo_distance(state_loc, location)
+        # us_states_centers = apply_to_all_dict(find_state_center, us_states)
+        # distance_to_us_states = apply_to_all_dict(distance, us_states_centers)
+        # min_distance = min([distance_to_us_states[key] for key in distance_to_us_states])
+        # for key in distance_to_us_states:
+        #     if distance_to_us_states[key] == min_distance:
+        #         return key
 
     return group_by_key([[find_nearest_state(tweet_location(tweet)), tweet] for tweet in tweets])
 
 
-
+# definitely need improve!!!
 def average_sentiments(tweets_by_state):
     """Calculate the average sentiment of the states by averaging over all
     the tweets from each state. Return the result as a dictionary from state
@@ -397,22 +411,45 @@ def average_sentiments(tweets_by_state):
     tweets_by_state -- A dictionary from state names to lists of tweets
     """
     "*** YOUR CODE HERE ***"
+    # Implementation 2
+
     result = {}
-    def analyze(tweets):
-        sentiments = apply_to_all(analyze_tweet_sentiment, tweets)
-        sentiments = keep_if(has_sentiment, sentiments)
-        sentiments_values = apply_to_all(sentiment_value, sentiments)
-        if len(sentiments_values) == 0:
-            return []
-        else:
-            return sum(sentiments_values)/len(sentiments_values)
 
     for key in tweets_by_state:
-        sentiment = analyze(tweets_by_state[key])
-        if sentiment:
-            result[key] = sentiment
+        tweets = tweets_by_state[key]
+        total, count_not_none, all_none = 0, 0, True
+
+        for tweet in tweets:
+            tweet_sentiment = analyze_tweet_sentiment(tweet)
+            if has_sentiment(tweet_sentiment):
+                total += sentiment_value(tweet_sentiment)
+                count_not_none += 1
+                all_none = False
+
+        if not all_none and tweets:
+            result[key] = total / count_not_none
 
     return result
+
+
+    # Implementation 1
+
+    # result = {}
+    # def analyze(tweets):
+    #     sentiments = apply_to_all(analyze_tweet_sentiment, tweets)
+    #     sentiments = keep_if(has_sentiment, sentiments)
+    #     sentiments_values = apply_to_all(sentiment_value, sentiments)
+    #     if len(sentiments_values) == 0:
+    #         return []
+    #     else:
+    #         return sum(sentiments_values)/len(sentiments_values)
+    #
+    # for key in tweets_by_state:
+    #     sentiment = analyze(tweets_by_state[key])
+    #     if sentiment:
+    #         result[key] = sentiment
+    #
+    # return result
 
 ##########################
 # Command Line Interface #
